@@ -1,0 +1,20 @@
+{
+    "phases": {
+      "install": {
+        "cmds": [
+          "npm install --prefix frontend",
+          "npm install"
+        ]
+      },
+      "build": {
+        "cmds": [
+          "npm run build --prefix frontend"
+        ]
+      },
+      "start": {
+        "cmds": [
+          "node src/server.js"
+        ]
+      }
+    }
+  }
