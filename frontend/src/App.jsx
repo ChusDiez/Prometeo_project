@@ -14,7 +14,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Rutas públicas */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         {/* ... otras rutas públicas, p.ej. /register, /landing, etc. */}
 
         {/* Rutas privadas bajo AuthGuard */}

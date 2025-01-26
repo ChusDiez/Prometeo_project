@@ -6,47 +6,34 @@ function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError(null);
+    setError('');
 
     try {
-      const baseUrl = process.env.REACT_APP_API_BASE_URL 
-        || 'https://prometeoproject-production.up.railway.app';
-
-      const response = await fetch(`${baseUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al iniciar sesión');
+      // Ejemplo: si es un login ficticio
+      if (email === 'root@admin.com' && password === 'root123') {
+        // user root => admin
+        navigate('/admindashboard');
+      } else {
+        // De lo contrario, prueba con tu fetch a /api/auth/login...
+        // O para simplificar, lanza error
+        setError('Credenciales incorrectas');
       }
-
-      const data = await response.json();
-      console.log('Login exitoso:', data);
-
-      if (data.session?.access_token) {
-        localStorage.setItem('token', data.session.access_token);
-      }
-
-      navigate('/exam');
     } catch (err) {
-      console.error('Error de login:', err);
-      setError(err.message);
+      console.error(err);
+      setError('Error al iniciar sesión');
     }
   }
 
   return (
-    <div>
+    <div style={{ textAlign: 'center', marginTop: '40px' }}>
       <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ display: 'inline-block' }}>
         <div>
-          <label>Correo electrónico:</label>
+          <label>Correo:</label>
           <input 
             type="email"
             value={email}
