@@ -1,7 +1,7 @@
 // src/controllers/auth.controller.js
 
 const { supabase } = require('../helpers/supabase');
-const { subscribeToNewsletter } = require('../services/brevo.service');
+const { subscribeToNewsletter } = require('../helpers/brevo');
 
 exports.register = async (req, res) => {
   try {
