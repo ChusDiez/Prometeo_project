@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -10,45 +11,37 @@ import {
 function AdminDashboard() {
   const dispatch = useDispatch();
 
-  // =============== Redux state (adminSlice) =================
   const {
-    // Para editar examen
     updatingExam,
     updateError,
     updateMessage,
-
-    // Para user-scores
     usersScores,
     loadingScores,
     scoresError,
-
-    // Para exam stats (p80, p70, p60, media)
     examsStats,
     loadingStats,
     statsError
   } = useSelector((state) => state.admin);
 
-
-  // =============== LOCAL STATE: Subir CSV ===============
+  // CSV local states
   const [csvFile, setCsvFile] = useState(null);
   const [csvUploadError, setCsvUploadError] = useState('');
   const [csvUploadMessage, setCsvUploadMessage] = useState('');
 
-  // exam fields (para subir CSV y/o editar exam)
+  // exam fields
   const [examId, setExamId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [zoomUrl, setZoomUrl] = useState('');
 
-  // =============== LOCAL STATE: Lista de usuarios (fetch local) ===============
+  // users list
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [errorUsers, setErrorUsers] = useState(null);
 
-  // =============== LOCAL STATE: Filtro exam_id en Stats ===============
+  // stats filter
   const [filterExamId, setFilterExamId] = useState('');
 
-  // ============== Manejadores de CSV ==============
   function handleCSVChange(e) {
     setCsvFile(e.target.files[0]);
   }
@@ -63,6 +56,9 @@ function AdminDashboard() {
     }
 
     try {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL 
+        || 'https://prometeoproject-production.up.railway.app';
+
       const formData = new FormData();
       formData.append('csvFile', csvFile);
       formData.append('start_date', startDate);
@@ -70,7 +66,7 @@ function AdminDashboard() {
       formData.append('zoom_url', zoomUrl);
       formData.append('examId', examId);
 
-      const res = await fetch('/api/exams/upload-csv', {
+      const res = await fetch(`${baseUrl}/api/exams/upload-csv`, {
         method: 'POST',
         body: formData
       });
@@ -88,7 +84,6 @@ function AdminDashboard() {
     }
   }
 
-  // ============== Manejadores para Editar Examen (Redux) ==============
   function handleSaveExam() {
     if (!examId) {
       alert('Especifica el ID del examen');
@@ -97,19 +92,23 @@ function AdminDashboard() {
     const payload = {
       start_date: startDate,
       end_date: endDate,
-      zoom_url: zoomUrl,
+      zoom_url: zoomUrl
     };
     dispatch(updateExamThunk({ examId, payload }));
   }
 
-  // ============== Lista users (/api/admin/users) con fetch ==============
   async function fetchUsers() {
     setLoadingUsers(true);
     setErrorUsers(null);
+
     try {
-      const response = await fetch('/api/admin/users');
+      const baseUrl = process.env.REACT_APP_API_BASE_URL 
+        || 'https://prometeoproject-production.up.railway.app';
+
+      const response = await fetch(`${baseUrl}/api/admin/users`);
       if (!response.ok) {
-        throw new Error('Error al obtener la lista de usuarios');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al obtener la lista de usuarios');
       }
       const data = await response.json();
       setUsers(data.users || []);
@@ -121,39 +120,32 @@ function AdminDashboard() {
     }
   }
 
-  // ============== user-scores (Redux) ==============
   useEffect(() => {
     dispatch(fetchUsersScoresThunk());
   }, [dispatch]);
 
-  // ============== exam-stats (Redux) ==============
   useEffect(() => {
     dispatch(fetchExamsStatsThunk());
   }, [dispatch]);
 
-  // ============== fetchUsers local ==============
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Limpieza de mensajes al desmontar
   useEffect(() => {
     return () => {
       dispatch(clearAdminMessages());
     };
   }, [dispatch]);
 
-  // Filtrar examStats
   const filteredStats = examsStats.filter(item =>
     filterExamId === '' || item.exam_id.includes(filterExamId)
   );
 
-  // ============== Render ==============
   return (
     <div style={styles.container}>
       <h1>Admin Dashboard</h1>
 
-      {/* ==================== Subir CSV + exam fields ===================== */}
       <section style={styles.section}>
         <h2>Subir CSV + Examen Data</h2>
         <div style={styles.formGroup}>
@@ -163,11 +155,10 @@ function AdminDashboard() {
 
         <div style={styles.formGroup}>
           <label>Exam ID (opcional):</label>
-          <input 
+          <input
             type="text"
             value={examId}
             onChange={(e) => setExamId(e.target.value)}
-            placeholder="uuid o vacío para crear uno nuevo"
           />
         </div>
         <div style={styles.formGroup}>
@@ -195,15 +186,11 @@ function AdminDashboard() {
           />
         </div>
 
-        <button onClick={handleUploadCSV}>
-          Subir CSV / Crear-Actualizar
-        </button>
+        <button onClick={handleUploadCSV}>Subir CSV / Crear-Actualizar</button>
         {csvUploadError && <p style={{ color: 'red' }}>{csvUploadError}</p>}
         {csvUploadMessage && <p style={{ color: 'green' }}>{csvUploadMessage}</p>}
       </section>
 
-
-      {/* ==================== Editar Examen (Redux Thunk) ===================== */}
       <section style={styles.section}>
         <h2>Editar Examen</h2>
         <div style={styles.formGroup}>
@@ -245,8 +232,6 @@ function AdminDashboard() {
         {updateMessage && <p style={{ color: 'green' }}>{updateMessage}</p>}
       </section>
 
-
-      {/* ==================== USERS-SCORES (Redux) ===================== */}
       <section style={styles.section}>
         <h2>Usuarios y Notas (userScores)</h2>
         {loadingScores && <p>Cargando users-scores...</p>}
@@ -275,8 +260,6 @@ function AdminDashboard() {
         )}
       </section>
 
-
-      {/* ==================== USERS (fetch local) ===================== */}
       <section style={styles.section}>
         <h2>Lista de Usuarios (fetch /api/admin/users)</h2>
         {loadingUsers && <p>Cargando usuarios...</p>}
@@ -305,11 +288,8 @@ function AdminDashboard() {
         )}
       </section>
 
-
-      {/* ==================== EXAMS STATS (p80, p70, p60, media) ===================== */}
       <section style={styles.section}>
         <h2>Estadísticas de Exámenes (p80, p70, p60, media)</h2>
-        
         <label>Filtrar exam_id: </label>
         <input
           type="text"
@@ -350,32 +330,30 @@ function AdminDashboard() {
           <p>No hay datos de estadística para ese examen.</p>
         )}
       </section>
-
     </div>
   );
 }
 
-// Estilos
 const styles = {
   container: {
     maxWidth: '800px',
     margin: '0 auto',
     padding: '20px',
-    fontFamily: 'sans-serif',
+    fontFamily: 'sans-serif'
   },
   section: {
     marginBottom: '30px',
     border: '1px solid #ccc',
     padding: '15px',
-    borderRadius: '6px',
+    borderRadius: '6px'
   },
   formGroup: {
-    marginBottom: '10px',
+    marginBottom: '10px'
   },
   table: {
     width: '100%',
-    borderCollapse: 'collapse',
-  },
+    borderCollapse: 'collapse'
+  }
 };
 
 export default AdminDashboard;

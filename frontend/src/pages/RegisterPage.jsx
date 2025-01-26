@@ -4,13 +4,9 @@ import { useNavigate } from 'react-router-dom';
 
 function RegisterPage() {
   const navigate = useNavigate();
-
-  // Estados locales para el formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-
-  // Estado para manejar errores o feedback
   const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
@@ -18,11 +14,13 @@ function RegisterPage() {
     setError(null);
 
     try {
-      // Llamada a la ruta de tu backend: /api/auth/register
-      const response = await fetch('/api/auth/register', {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL 
+        || 'https://prometeoproject-production.up.railway.app';
+
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name })
       });
 
       if (!response.ok) {
@@ -33,12 +31,10 @@ function RegisterPage() {
       const data = await response.json();
       console.log('Registro exitoso:', data);
 
-      // Si data.session contiene el token, guárdalo en localStorage (o en context)
       if (data.session?.access_token) {
         localStorage.setItem('token', data.session.access_token);
       }
 
-      // Redirigir tras registro (p. ej. a /login o directamente al examen)
       navigate('/login');
     } catch (err) {
       console.error('Error de registro:', err);

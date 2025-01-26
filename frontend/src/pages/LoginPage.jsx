@@ -4,12 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
   const navigate = useNavigate();
-
-  // Estados para el formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Manejo de errores
   const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
@@ -17,11 +13,13 @@ function LoginPage() {
     setError(null);
 
     try {
-      // Llamada a la ruta /api/auth/login
-      const response = await fetch('/api/auth/login', {
+      const baseUrl = process.env.REACT_APP_API_BASE_URL 
+        || 'https://prometeoproject-production.up.railway.app';
+
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
 
       if (!response.ok) {
@@ -32,12 +30,10 @@ function LoginPage() {
       const data = await response.json();
       console.log('Login exitoso:', data);
 
-      // Guardar el token en localStorage si existe
       if (data.session?.access_token) {
         localStorage.setItem('token', data.session.access_token);
       }
 
-      // Redirigir (ejemplo: a la página del examen)
       navigate('/exam');
     } catch (err) {
       console.error('Error de login:', err);

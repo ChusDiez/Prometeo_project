@@ -1,12 +1,13 @@
 // src/store/lobbySlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Thunk: GET /api/exams/current
+const baseUrl = process.env.REACT_APP_API_BASE_URL || 'https://prometeoproject-production.up.railway.app';
+
 export const fetchCurrentExam = createAsyncThunk(
   'lobby/fetchCurrentExam',
   async (_, thunkAPI) => {
     try {
-      const response = await fetch('/api/exams/current');
+      const response = await fetch(`${baseUrl}/api/exams/current`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error al obtener el examen actual');

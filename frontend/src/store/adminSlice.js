@@ -1,6 +1,9 @@
 // src/store/adminSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+// Leer la URL base de la variable de entorno
+const baseUrl = process.env.REACT_APP_API_BASE_URL || 'https://prometeoproject-production.up.railway.app';
+
 // 1) Subir CSV
 export const uploadCsvThunk = createAsyncThunk(
   'admin/uploadCsv',
@@ -9,7 +12,7 @@ export const uploadCsvThunk = createAsyncThunk(
       const formData = new FormData();
       formData.append('csvFile', file);
 
-      const response = await fetch('/api/exams/upload-csv', {
+      const response = await fetch(`${baseUrl}/api/exams/upload-csv`, {
         method: 'POST',
         body: formData,
       });
@@ -18,7 +21,7 @@ export const uploadCsvThunk = createAsyncThunk(
         throw new Error(errorData.error || 'Error al subir CSV');
       }
       const data = await response.json();
-      return data; // { message, inserted }
+      return data; // { message, inserted, examId, etc. }
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
@@ -30,7 +33,7 @@ export const updateExamThunk = createAsyncThunk(
   'admin/updateExam',
   async ({ examId, payload }, thunkAPI) => {
     try {
-      const response = await fetch(`/api/exams/${examId}`, {
+      const response = await fetch(`${baseUrl}/api/exams/${examId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -52,7 +55,7 @@ export const fetchUsersScoresThunk = createAsyncThunk(
   'admin/fetchUsersScores',
   async (_, thunkAPI) => {
     try {
-      const response = await fetch('/api/admin/users-scores');
+      const response = await fetch(`${baseUrl}/api/admin/users-scores`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al obtener users-scores');
@@ -70,7 +73,7 @@ export const fetchExamsStatsThunk = createAsyncThunk(
   'admin/fetchExamsStats',
   async (_, thunkAPI) => {
     try {
-      const response = await fetch('/api/admin/exams-stats');
+      const response = await fetch(`${baseUrl}/api/admin/exams-stats`);
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.error || 'Error al obtener stats');
@@ -86,22 +89,18 @@ export const fetchExamsStatsThunk = createAsyncThunk(
 const adminSlice = createSlice({
   name: 'admin',
   initialState: {
-    // exam stats
     examsStats: [],
     loadingStats: false,
     statsError: null,
 
-    // upload CSV
     uploadingCSV: false,
     uploadError: null,
     uploadMessage: null,
 
-    // update exam
     updatingExam: false,
     updateError: null,
     updateMessage: null,
 
-    // user-scores
     usersScores: [],
     loadingScores: false,
     scoresError: null,
