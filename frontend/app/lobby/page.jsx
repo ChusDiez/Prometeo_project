@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCurrentExam } from '../../store/lobbySlice';
+import { fetchCurrentExam } from '../lib/redux//lobbySlice';
 import { useRouter } from 'next/navigation';
 
 export default function LobbyPage() {

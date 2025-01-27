@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchExamQuestions, submitExamAnswers } from '../../store/examSlice';
+import { fetchExamQuestions, submitExamAnswers } from '../lib/redux/examSlice';
 
 export default function ExamPage() {
   const dispatch = useDispatch();

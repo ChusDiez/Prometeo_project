@@ -6,7 +6,7 @@ import {
   fetchUsersScoresThunk,
   fetchExamsStatsThunk,
   clearAdminMessages
-} from '../../store/adminSlice';
+} from '../../lib/redux/adminSlice';
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
