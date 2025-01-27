@@ -5,6 +5,7 @@ import { useAppSelector, useAppDispatch } from '../lib/redux/hooks';
 import { toggleTheme } from '../lib/redux/themeSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Image from 'next/image';
 
 const Header = () => {
   const router = useRouter();
@@ -42,7 +43,7 @@ const Header = () => {
           padding: 0,
         }}
       >
-        <img
+        <Image
           src="https://iz.academy/wp-content/uploads/2022/06/Logo_ST_Black.png"
           alt="Logo"
           style={{ 
@@ -50,6 +51,7 @@ const Header = () => {
             height: 'auto',
             filter: isDarkMode ? 'invert(1)' : 'none' // Cambia a blanco en modo oscuro
           }}
+          loader={({ src }) => src}
         />
       </button>
 
