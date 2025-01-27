@@ -1,4 +1,3 @@
-// examSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
 /** INTERFACES */
@@ -21,6 +20,17 @@ interface Result {
   timestamp: string;
 }
 
+interface SubmitAnswersPayload {
+  examId: string;
+  answers: Record<string, string>;
+}
+
+interface SubmitResponse {
+  success: boolean;
+  score: number;
+  message?: string;
+}
+
 interface ExamState {
   currentExam: Exam | null;
   questions: Question[];
@@ -39,44 +49,30 @@ const initialState: ExamState = {
 };
 
 /** THUNKS */
-// Ejemplo: obtener preguntas del examen desde tu API
 export const fetchExamQuestions = createAsyncThunk<Question[], void>(
   'exam/fetchExamQuestions',
   async (_, { rejectWithValue }) => {
     try {
-      // Reemplaza con la URL real de tu backend
-      const response = await fetch('https://tu-api.com/exam/questions');
-      if (!response.ok) {
-        throw new Error('Error al cargar preguntas');
-      }
-      const data: Question[] = await response.json();
-      return data;
+      const response = await fetch('https://prometeoproject-production.up.railway.app/api/exam/questions');
+      if (!response.ok) throw new Error('Error al cargar preguntas');
+      return await response.json();
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
   }
 );
 
-// Ejemplo: enviar respuestas al backend
-// Ajusta "payload" al formato que tu API espere
-interface SubmitAnswersPayload {
-  examId: string;
-  answers: Record<string, string>;
-}
-export const submitExamAnswers = createAsyncThunk<any, SubmitAnswersPayload>(
+export const submitExamAnswers = createAsyncThunk<SubmitResponse, SubmitAnswersPayload>(
   'exam/submitExamAnswers',
   async (payload, { rejectWithValue }) => {
     try {
-      const response = await fetch('https://tu-api.com/exam/submit-answers', {
+      const response = await fetch('https://prometeoproject-production.up.railway.app/api/exam/submit-answers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) {
-        throw new Error('Error al enviar respuestas');
-      }
-      const data = await response.json();
-      return data; // Podrías devolver, por ejemplo, la nota final
+      if (!response.ok) throw new Error('Error al enviar respuestas');
+      return await response.json();
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -92,8 +88,6 @@ const examSlice = createSlice({
       state.currentExam = action.payload;
     },
     submitAnswer(state, action: PayloadAction<Question>) {
-      // Ejemplo: agregamos la pregunta respondida a un array
-      // (Podrías guardar también la respuesta del usuario)
       state.questions.push(action.payload);
     },
     setResults(state, action: PayloadAction<Result[]>) {
@@ -107,39 +101,38 @@ const examSlice = createSlice({
       state.error = null;
     },
   },
-  /** extraReducers para manejar los thunks */
   extraReducers: (builder) => {
-    // fetchExamQuestions
-    builder.addCase(fetchExamQuestions.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchExamQuestions.fulfilled, (state, action) => {
-      state.loading = false;
-      state.questions = action.payload; // Guardamos las preguntas en el estado
-    });
-    builder.addCase(fetchExamQuestions.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string || 'Error al cargar preguntas';
-    });
-
-    // submitExamAnswers
-    builder.addCase(submitExamAnswers.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(submitExamAnswers.fulfilled, (state, action) => {
-      state.loading = false;
-      // Por ejemplo, podrías guardar la nota o resultados devueltos por el backend
-      // state.results = action.payload.results; // Depende de tu respuesta
-    });
-    builder.addCase(submitExamAnswers.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string || 'Error al enviar respuestas';
-    });
+    builder
+      .addCase(fetchExamQuestions.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchExamQuestions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.questions = action.payload;
+      })
+      .addCase(fetchExamQuestions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string || 'Error al cargar preguntas';
+      })
+      .addCase(submitExamAnswers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitExamAnswers.fulfilled, (state, action: PayloadAction<SubmitResponse>) => {
+        state.loading = false;
+        state.results.push({
+          score: action.payload.score,
+          totalQuestions: state.questions.length,
+          timestamp: new Date().toISOString()
+        });
+      })
+      .addCase(submitExamAnswers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string || 'Error al enviar respuestas';
+      });
   },
 });
 
-/** Exportar acciones sincronas y el reducer */
 export const { startExam, submitAnswer, setResults, resetExam } = examSlice.actions;
 export default examSlice.reducer;

@@ -75,7 +75,7 @@ export const updateExamThunk = createAsyncThunk<
   { examId: string; payload: UpdateExamPayload }
 >(
   'admin/updateExam',
-  async ({ examId, payload }) => {
+  async ({ examId: _examId, payload: _payload }) => { 
     // Aquí iría la lógica de fetch a tu API real,
     // usando examId y payload. Devuelves un objeto con 'message'.
     return { message: 'Examen actualizado con éxito' };

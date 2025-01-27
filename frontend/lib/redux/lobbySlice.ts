@@ -1,8 +1,15 @@
-// lobbySlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
+interface LobbyExam {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string;
+  status: 'pending' | 'active' | 'completed';
+}
+
 interface LobbyState {
-  exam: any;
+  exam: LobbyExam | null;
   loading: boolean;
   error: string | null;
 }
@@ -13,13 +20,16 @@ const initialState: LobbyState = {
   error: null,
 };
 
-/** Thunk para obtener el examen actual */
-export const fetchCurrentExam = createAsyncThunk(
+export const fetchCurrentExam = createAsyncThunk<LobbyExam>(
   'lobby/fetchCurrentExam',
   async () => {
-    // fetch tu API
-    // Devuelve el examen actual {id, title, start_date, ...}
-    return { id: 123, title: 'Examen final', start_date: '2025-01-30T10:00:00Z' };
+    const mockExam: LobbyExam = {
+      id: '123',
+      title: 'Examen final',
+      start_date: '2025-01-30T10:00:00Z',
+      status: 'pending'
+    };
+    return mockExam;
   }
 );
 
@@ -28,18 +38,19 @@ const lobbySlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(fetchCurrentExam.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(fetchCurrentExam.fulfilled, (state, action: PayloadAction<any>) => {
-      state.loading = false;
-      state.exam = action.payload;
-    });
-    builder.addCase(fetchCurrentExam.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.error.message || 'Error al obtener el examen actual';
-    });
+    builder
+      .addCase(fetchCurrentExam.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentExam.fulfilled, (state, action: PayloadAction<LobbyExam>) => {
+        state.loading = false;
+        state.exam = action.payload;
+      })
+      .addCase(fetchCurrentExam.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Error al obtener el examen actual';
+      });
   },
 });
 
