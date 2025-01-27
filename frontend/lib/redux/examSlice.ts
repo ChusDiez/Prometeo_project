@@ -1,34 +1,39 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { supabase } from './supabaseClient'; // Asegúrate de tener esta configuración
 
 /** INTERFACES */
 interface Question {
   id: string;
+  exam_id: string;
   text: string;
-  options: string[];
-  correctAnswer: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  correct_option: 'A' | 'B' | 'C';
+  topic: string;
+  feedback?: string;
 }
 
 interface Exam {
   id: string;
   title: string;
-  duration: number;
+  start_date: string;
+  end_date: string;
+  user_id: string;
+  zoom_url?: string;
 }
 
 interface Result {
-  score: number;
-  totalQuestions: number;
-  timestamp: string;
+  id: string;
+  user_id: string;
+  exam_id: string;
+  final_score: number;
+  created_at: string;
 }
 
-interface SubmitAnswersPayload {
-  examId: string;
-  answers: Record<string, string>;
-}
-
-interface SubmitResponse {
-  success: boolean;
-  score: number;
-  message?: string;
+interface AnswerPayload {
+  question_id: string;
+  selected_option: 'A' | 'B' | 'C';
 }
 
 interface ExamState {
@@ -49,30 +54,63 @@ const initialState: ExamState = {
 };
 
 /** THUNKS */
-export const fetchExamQuestions = createAsyncThunk<Question[], void>(
+export const fetchExamQuestions = createAsyncThunk<Question[], string>(
   'exam/fetchExamQuestions',
-  async (_, { rejectWithValue }) => {
+  async (examId, { rejectWithValue }) => {
     try {
-      const response = await fetch('https://prometeoproject-production.up.railway.app/api/exam/questions');
-      if (!response.ok) throw new Error('Error al cargar preguntas');
-      return await response.json();
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('exam_id', examId);
+
+      if (error) throw error;
+      return data as Question[];
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
   }
 );
 
-export const submitExamAnswers = createAsyncThunk<SubmitResponse, SubmitAnswersPayload>(
+export const submitExamAnswers = createAsyncThunk<void, { examId: string; answers: AnswerPayload[] }>(
   'exam/submitExamAnswers',
-  async (payload, { rejectWithValue }) => {
+  async ({ examId, answers }, { rejectWithValue }) => {
     try {
-      const response = await fetch('https://prometeoproject-production.up.railway.app/api/exam/submit-answers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error('Error al enviar respuestas');
-      return await response.json();
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) throw new Error('Usuario no autenticado');
+
+      const formattedAnswers = answers.map(answer => ({
+        exam_id: examId,
+        user_id: user.data.user.id,
+        question_id: answer.question_id,
+        selected_option: answer.selected_option
+      }));
+
+      const { error } = await supabase
+        .from('answers')
+        .insert(formattedAnswers);
+
+      if (error) throw error;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const fetchExamResults = createAsyncThunk<Result[], string>(
+  'exam/fetchExamResults',
+  async (examId, { rejectWithValue }) => {
+    try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) throw new Error('Usuario no autenticado');
+
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select('*')
+        .eq('exam_id', examId)
+        .eq('user_id', user.data.user.id);
+
+      if (error) throw error;
+      return data as Result[];
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -84,14 +122,8 @@ const examSlice = createSlice({
   name: 'exam',
   initialState,
   reducers: {
-    startExam(state, action: PayloadAction<Exam>) {
+    setCurrentExam(state, action: PayloadAction<Exam>) {
       state.currentExam = action.payload;
-    },
-    submitAnswer(state, action: PayloadAction<Question>) {
-      state.questions.push(action.payload);
-    },
-    setResults(state, action: PayloadAction<Result[]>) {
-      state.results = action.payload;
     },
     resetExam(state) {
       state.currentExam = null;
@@ -119,20 +151,27 @@ const examSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(submitExamAnswers.fulfilled, (state, action: PayloadAction<SubmitResponse>) => {
+      .addCase(submitExamAnswers.fulfilled, (state) => {
         state.loading = false;
-        state.results.push({
-          score: action.payload.score,
-          totalQuestions: state.questions.length,
-          timestamp: new Date().toISOString()
-        });
       })
       .addCase(submitExamAnswers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string || 'Error al enviar respuestas';
+      })
+      .addCase(fetchExamResults.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchExamResults.fulfilled, (state, action) => {
+        state.loading = false;
+        state.results = action.payload;
+      })
+      .addCase(fetchExamResults.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string || 'Error al obtener resultados';
       });
   },
 });
 
-export const { startExam, submitAnswer, setResults, resetExam } = examSlice.actions;
+export const { setCurrentExam, resetExam } = examSlice.actions;
 export default examSlice.reducer;

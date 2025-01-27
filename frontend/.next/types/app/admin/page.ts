@@ -1,4 +1,4 @@
-// File: /Users/Chus/Desktop/Prometo Project/frontend/app/admin/page.jsx
+// File: /Users/Chus/Desktop/Prometeo project/frontend/app/admin/page.jsx
 import * as entry from '../../../../app/admin/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

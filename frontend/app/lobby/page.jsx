@@ -3,6 +3,16 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCurrentExam } from '../../lib/redux/lobbySlice';
 import { useRouter } from 'next/navigation';
+import LobbyComponent from '../components/Lobby/Lobby';
+
+
+const LobbyPage = () => {
+  return (
+    <main>
+      <LobbyComponent />
+    </main>
+  );
+};
 
 export default function LobbyPage() {
   const dispatch = useDispatch();
