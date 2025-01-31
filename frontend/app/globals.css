@@ -14,13 +14,18 @@
   --color-border: rgba(0, 0, 0, 0.1);
   --color-input-background: #f8fafc;
   --transition-speed: 0.3s;
+  /* Para el logo en modo claro */
+  --color-logo-filter: invert(0%);
 
-  /* Dark Theme */
+  /* Dark Theme (definimos variables que tomaremos con data-theme="dark") */
   --dark-color-primary: #00a8ff;
   --dark-color-text: #ffffff;
   --dark-color-subtext: #cccccc;
   --dark-color-background: #1a1a1a;
   --dark-color-border: rgba(255, 255, 255, 0.1);
+
+  /* Para el logo en modo oscuro */
+  --dark-color-logo-filter: invert(90%);
 }
 
 [data-theme="dark"] {
@@ -29,6 +34,7 @@
   --color-subtext: var(--dark-color-subtext);
   --color-background: var(--dark-color-background);
   --color-border: var(--dark-color-border);
+  --color-logo-filter: invert(90%);
 }
 
 * {
@@ -59,6 +65,11 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.logo-image {
+  max-width: 100%;
+  height: auto !important;
 }
 
 /* Responsive */

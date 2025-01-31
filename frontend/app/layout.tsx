@@ -5,6 +5,10 @@ import { Providers } from '../lib/redux/provider';
 import './globals.css';
 import Header from '../components/Header';
 import { useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
+import { persistor, store } from '../lib/redux/store';
+import { PersistGate } from 'redux-persist/integration/react';
+import logo from 'frontend/public/Logo_ST_Black.png';
 
 export default function RootLayout({
   children,

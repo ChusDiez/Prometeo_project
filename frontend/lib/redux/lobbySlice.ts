@@ -1,41 +1,40 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { supabase } from './supabaseClient'; // Asegúrate de importar tu cliente Supabase
+import { supabase } from './supabaseClient';
+import type { RootState } from './store';
 
-interface LobbyExam {
+interface Exam {
   id: string;
   title: string;
   start_date: string;
-  end_date: string;
+  end_date?: string;
   zoom_url?: string;
-  user_id: string;
 }
 
 interface LobbyState {
-  exams: LobbyExam[]; // Cambiado a array para múltiples exámenes
+  currentExam: Exam | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: LobbyState = {
-  exams: [],
+  currentExam: null,
   loading: false,
   error: null,
 };
 
-export const fetchActiveExams = createAsyncThunk<LobbyExam[]>(
-  'lobby/fetchActiveExams',
+export const fetchCurrentExam = createAsyncThunk<Exam>(
+  'lobby/fetchCurrentExam',
   async (_, { rejectWithValue }) => {
     try {
-      const currentDate = new Date().toISOString();
-      
       const { data, error } = await supabase
         .from('exams')
         .select('*')
-        .gte('end_date', currentDate)
-        .order('start_date', { ascending: true });
+        .order('start_date', { ascending: false })
+        .limit(1)
+        .single();
 
       if (error) throw error;
-      return data as LobbyExam[];
+      return data as Exam;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -48,17 +47,17 @@ const lobbySlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchActiveExams.pending, (state) => {
+      .addCase(fetchCurrentExam.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchActiveExams.fulfilled, (state, action: PayloadAction<LobbyExam[]>) => {
+      .addCase(fetchCurrentExam.fulfilled, (state, action: PayloadAction<Exam>) => {
         state.loading = false;
-        state.exams = action.payload;
+        state.currentExam = action.payload;
       })
-      .addCase(fetchActiveExams.rejected, (state, action) => {
+      .addCase(fetchCurrentExam.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Error al obtener exámenes activos';
+        state.error = action.payload as string || 'Error al obtener el examen actual';
       });
   },
 });

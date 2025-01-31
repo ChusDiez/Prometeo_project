@@ -1,6 +1,6 @@
 // components/Header.tsx
 'use client';
-
+import logo from '../public/Logo_ST_Black.png';
 import { useAppSelector, useAppDispatch } from '../lib/redux/hooks';
 import { toggleTheme } from '../lib/redux/themeSlice';
 import { useRouter } from 'next/navigation';
@@ -44,7 +44,7 @@ const Header = () => {
         }}
       >
         <Image
-          src="https://iz.academy/wp-content/uploads/2022/06/Logo_ST_Black.png"
+          src={logo}
           alt="Logo"
           style={{ 
             width: '100px', 

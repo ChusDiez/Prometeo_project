@@ -1,27 +1,47 @@
 // lib/redux/store.ts
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import themeReducer from './themeSlice';
+import lobbyReducer from './lobbySlice';
+import examReducer from './examSlice';
+import authReducer from './authSlice';
+import adminReducer from './adminSlice';
 
+// Configuración de persistencia
 const persistConfig = {
-  key: 'theme',
+  key: 'root',
   storage,
+  whitelist: ['auth', 'theme'], // Reducers a persistir
+  blacklist: ['admin', 'lobby', 'exam'] // Reducers no persistidos
 };
 
-const persistedReducer = persistReducer(persistConfig, themeReducer);
+// Combinar todos los reducers
+const rootReducer = combineReducers({
+  theme: themeReducer,
+  lobby: lobbyReducer,
+  exam: examReducer,
+  auth: authReducer,
+  admin: adminReducer
+});
+
+// Reducer persistido
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: {
-    theme: persistedReducer,
-  },
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REGISTER'],
+        ignoredPaths: ['_persist']
+      }
     }),
+  devTools: process.env.NODE_ENV !== 'production'
 });
 
 export const persistor = persistStore(store);
 
-export type RootState = ReturnType<typeof store.getState>;
+// Tipos globales
 export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>;

@@ -1,5 +1,6 @@
+// lib/redux/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { supabase } from './supabaseClient'; // Asegúrate de tener esta configuración
+import { supabase } from './supabaseClient';
 
 interface User {
   id: string;
@@ -33,8 +34,8 @@ export const signUp = createAsyncThunk(
       
       if (error) throw error;
       return {
-        id: data.user?.id,
-        email: data.user?.email,
+        id: data.user?.id || '',
+        email: data.user?.email || '',
         name: data.user?.user_metadata?.name
       };
     } catch (error: any) {
@@ -47,12 +48,15 @@ export const signIn = createAsyncThunk(
   'auth/signIn',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
       if (error) throw error;
       return {
-        id: data.user?.id,
-        email: data.user?.email,
+        id: data.user?.id || '',
+        email: data.user?.email || '',
         name: data.user?.user_metadata?.name
       };
     } catch (error: any) {
@@ -70,11 +74,11 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
+      supabase.auth.signOut();
     }
   },
   extraReducers: (builder) => {
     builder
-      // SignUp
       .addCase(signUp.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -88,8 +92,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string || 'Error en el registro';
       })
-      
-      // SignIn
       .addCase(signIn.pending, (state) => {
         state.loading = true;
         state.error = null;
