@@ -1,0 +1,10 @@
+/* app/register/page.module.css */
+.container {
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .formContainer {
+    max-width: 400px;
+    margin: 0 auto;
+  }
