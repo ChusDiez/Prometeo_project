@@ -3,7 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 export default function ResultsPage() {
-  const { finalScore, answersWithQuestions } = useSelector((state) => state.exam);
+  const { finalScore, answersWithQuestions } = useSelector((state: { exam: { finalScore: number; answersWithQuestions: any[] } }) => state.exam);
 
   if (!answersWithQuestions) {
     return <div style={{ color: '#333' }}>No hay resultados aún.</div>; // Color fijo

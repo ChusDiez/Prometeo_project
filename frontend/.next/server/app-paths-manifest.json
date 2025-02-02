@@ -1,7 +1,9 @@
 {
   "/register/page": "app/register/page.js",
-  "/page": "app/page.js",
-  "/lobby/page": "app/lobby/page.js",
+  "/exams/page": "app/exams/page.js",
   "/admin/page": "app/admin/page.js",
+  "/lobby/page": "app/lobby/page.js",
+  "/results/page": "app/results/page.js",
+  "/page": "app/page.js",
   "/login/page": "app/login/page.js"
 }

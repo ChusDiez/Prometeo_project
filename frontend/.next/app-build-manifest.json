@@ -19,12 +19,18 @@
     "/register/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/register/page.css",
       "static/chunks/app/register/page.js"
     ],
     "/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
+    ],
+    "/exams/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/exams/page.js"
     ],
     "/lobby/page": [
       "static/chunks/webpack.js",

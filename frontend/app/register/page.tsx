@@ -1,15 +1,16 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+import { supabase } from '@/lib/redux/supabaseClient';
 
-export default function RegisterPage() {
+export default function RegisterPage(): JSX.Element {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [error, setError] = useState(null);
-
+  const [error, setError] = useState<string | null>(null);
+  
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -39,7 +40,8 @@ export default function RegisterPage() {
       router.push('/login');
     } catch (err) {
       console.error('Error de registro:', err);
-      setError(err.message);
+      const typedErr = err as Error;
+      setError(typedErr.message);
     }
   }
 
@@ -183,12 +185,23 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className={styles.submitButton}
-          >
-            Registrarse
-          </button>
+            <button
+              type="submit"
+              style={{
+                padding: '12px 40px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#4a90e2',
+                color: 'white',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                width: '100%' // Ancho completo
+              }}
+            >
+              Registrarse
+            </button>
         </form>
 
         <p style={{

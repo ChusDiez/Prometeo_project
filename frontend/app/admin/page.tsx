@@ -1,8 +1,19 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+// REQUIERE: instalar y configurar redux, react-redux en tu proyecto
 import { useSelector, useDispatch } from 'react-redux';
+
+// REQUIERE: que en tu carpeta ../../lib/redux/store.ts existan los tipos AppDispatch y RootState
+// Ej: export type RootState = ReturnType<typeof store.getState>;
+//     export type AppDispatch = typeof store.dispatch;
 import type { AppDispatch, RootState } from '../../lib/redux/store';
-import { 
+
+// REQUIERE: que en tu carpeta ../../lib/redux/adminSlice existan estos thunks y acciones
+// Ej: export const updateExamThunk = createAsyncThunk(...);
+//     export const fetchUsersScoresThunk = createAsyncThunk(...);
+//     export const fetchExamsStatsThunk = createAsyncThunk(...);
+//     export const clearAdminMessages = createAction('admin/clearMessages');
+import {
   updateExamThunk,
   fetchUsersScoresThunk,
   fetchExamsStatsThunk,
@@ -40,6 +51,9 @@ interface UpdateExamPayload {
 
 export default function AdminDashboard() {
   const dispatch = useDispatch<AppDispatch>();
+
+  // Estado global desde el adminSlice. REQUIERE que el slice "admin" tenga
+  // updatingExam, updateError, etc. definidos.
   const {
     updatingExam,
     updateError,
@@ -87,6 +101,8 @@ export default function AdminDashboard() {
     }
 
     try {
+      // REQUIERE: que tu .env contenga NEXT_PUBLIC_API_BASE_URL
+      // De lo contrario usa el fallback https://prometeoproject-production.up.railway.app
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
         || 'https://prometeoproject-production.up.railway.app';
 
@@ -97,6 +113,7 @@ export default function AdminDashboard() {
       formData.append('zoom_url', zoomUrl);
       formData.append('examId', examId);
 
+      // REQUIERE: que tu API tenga /api/exams/upload-csv. De lo contrario dará 404 o similar.
       const res = await fetch(`${baseUrl}/api/exams/upload-csv`, {
         method: 'POST',
         body: formData
@@ -125,6 +142,7 @@ export default function AdminDashboard() {
       end_date: endDate,
       zoom_url: zoomUrl
     };
+    // REQUIERE: que updateExamThunk exista. 
     dispatch(updateExamThunk({ examId, payload }));
   };
 
@@ -133,6 +151,7 @@ export default function AdminDashboard() {
     setErrorUsers(null);
 
     try {
+      // REQUIERE: que tu API tenga /api/admin/users
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL 
         || 'https://prometeoproject-production.up.railway.app';
 
@@ -151,20 +170,27 @@ export default function AdminDashboard() {
     }
   };
 
+  // Llamada inicial a users-scores
   useEffect(() => {
+    // REQUIERE: que fetchUsersScoresThunk exista.
     dispatch(fetchUsersScoresThunk());
   }, [dispatch]);
 
+  // Llamada inicial a exam stats
   useEffect(() => {
+    // REQUIERE: que fetchExamsStatsThunk exista.
     dispatch(fetchExamsStatsThunk());
   }, [dispatch]);
 
+  // Llamada para traer lista de usuarios
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  // Limpiar mensajes al desmontar
   useEffect(() => {
     return () => {
+      // REQUIERE: que clearAdminMessages exista en tu slice.
       dispatch(clearAdminMessages());
     };
   }, [dispatch]);
@@ -175,111 +201,133 @@ export default function AdminDashboard() {
 
   return (
     <div style={styles.container}>
-      <h1>Admin Dashboard</h1>
+      <h1 style={styles.mainTitle}>Admin Dashboard</h1>
 
+      {/* Sección: Subir CSV */}
       <section style={styles.section}>
-        <h2>Subir CSV + Examen Data</h2>
+        <h2 style={styles.sectionTitle}>Subir CSV + Examen Data</h2>
         <div style={styles.formGroup}>
-          <label>Archivo CSV:</label>
-          <input type="file" accept=".csv" onChange={handleCSVChange} />
+          <label style={styles.label}>Archivo CSV:</label>
+          <input type="file" accept=".csv" onChange={handleCSVChange} style={styles.input} />
         </div>
 
         <div style={styles.formGroup}>
-          <label>Exam ID (opcional):</label>
+          <label style={styles.label}>Exam ID (opcional):</label>
           <input
             type="text"
             value={examId}
             onChange={(e) => setExamId(e.target.value)}
+            style={styles.input}
           />
         </div>
+
         <div style={styles.formGroup}>
-          <label>Start Date:</label>
+          <label style={styles.label}>Start Date:</label>
           <input
             type="datetime-local"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            style={styles.input}
           />
         </div>
+
         <div style={styles.formGroup}>
-          <label>End Date:</label>
+          <label style={styles.label}>End Date:</label>
           <input
             type="datetime-local"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            style={styles.input}
           />
         </div>
+
         <div style={styles.formGroup}>
-          <label>Zoom URL:</label>
+          <label style={styles.label}>Zoom URL:</label>
           <input
             type="text"
             value={zoomUrl}
             onChange={(e) => setZoomUrl(e.target.value)}
+            style={styles.input}
           />
         </div>
 
-        <button onClick={handleUploadCSV}>Subir CSV / Crear-Actualizar</button>
-        {csvUploadError && <p style={{ color: 'red' }}>{csvUploadError}</p>}
-        {csvUploadMessage && <p style={{ color: 'green' }}>{csvUploadMessage}</p>}
+        <button style={styles.buttonPrimary} onClick={handleUploadCSV}>
+          Subir CSV / Crear-Actualizar
+        </button>
+
+        {csvUploadError && <p style={styles.errorText}>{csvUploadError}</p>}
+        {csvUploadMessage && <p style={styles.successText}>{csvUploadMessage}</p>}
       </section>
 
+      {/* Sección: Editar Examen */}
       <section style={styles.section}>
-        <h2>Editar Examen</h2>
+        <h2 style={styles.sectionTitle}>Editar Examen</h2>
         <div style={styles.formGroup}>
-          <label>Exam ID:</label>
+          <label style={styles.label}>Exam ID:</label>
           <input
             type="text"
             value={examId}
             onChange={(e) => setExamId(e.target.value)}
+            style={styles.input}
           />
         </div>
         <div style={styles.formGroup}>
-          <label>Start Date:</label>
+          <label style={styles.label}>Start Date:</label>
           <input
             type="datetime-local"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            style={styles.input}
           />
         </div>
         <div style={styles.formGroup}>
-          <label>End Date:</label>
+          <label style={styles.label}>End Date:</label>
           <input
             type="datetime-local"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
+            style={styles.input}
           />
         </div>
         <div style={styles.formGroup}>
-          <label>Zoom URL:</label>
+          <label style={styles.label}>Zoom URL:</label>
           <input
             type="text"
             value={zoomUrl}
             onChange={(e) => setZoomUrl(e.target.value)}
+            style={styles.input}
           />
         </div>
-        <button onClick={handleSaveExam} disabled={updatingExam}>
+
+        <button
+          style={styles.buttonPrimary}
+          onClick={handleSaveExam}
+          disabled={updatingExam}
+        >
           {updatingExam ? 'Guardando...' : 'Guardar Cambios'}
         </button>
-        {updateError && <p style={{ color: 'red' }}>{updateError}</p>}
-        {updateMessage && <p style={{ color: 'green' }}>{updateMessage}</p>}
+        {updateError && <p style={styles.errorText}>{updateError}</p>}
+        {updateMessage && <p style={styles.successText}>{updateMessage}</p>}
       </section>
 
+      {/* Sección: Users + Notas */}
       <section style={styles.section}>
-        <h2>Usuarios y Notas (userScores)</h2>
+        <h2 style={styles.sectionTitle}>Usuarios y Notas (userScores)</h2>
         {loadingScores && <p>Cargando users-scores...</p>}
-        {scoresError && <p style={{ color: 'red' }}>{scoresError}</p>}
+        {scoresError && <p style={styles.errorText}>{scoresError}</p>}
         {!loadingScores && !scoresError && usersScores.length > 0 && (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.tableCell}>User ID</th>
-                <th style={styles.tableCell}>Exam ID</th>
-                <th style={styles.tableCell}>Final Score</th>
-                <th style={styles.tableCell}>Usuario / Examen</th>
+                <th style={styles.tableHeader}>User ID</th>
+                <th style={styles.tableHeader}>Exam ID</th>
+                <th style={styles.tableHeader}>Final Score</th>
+                <th style={styles.tableHeader}>Usuario / Examen</th>
               </tr>
             </thead>
             <tbody>
               {usersScores.map((row: Score, i: number) => (
-                <tr key={i}>
+                <tr key={i} style={styles.tableRow}>
                   <td style={styles.tableCell}>{row.user_id}</td>
                   <td style={styles.tableCell}>{row.exam_id}</td>
                   <td style={styles.tableCell}>{row.final_score}</td>
@@ -294,23 +342,24 @@ export default function AdminDashboard() {
         )}
       </section>
 
+      {/* Sección: Lista de usuarios */}
       <section style={styles.section}>
-        <h2>Lista de Usuarios (fetch /api/admin/users)</h2>
+        <h2 style={styles.sectionTitle}>Lista de Usuarios (fetch /api/admin/users)</h2>
         {loadingUsers && <p>Cargando usuarios...</p>}
-        {errorUsers && <p style={{ color: 'red' }}>{errorUsers}</p>}
+        {errorUsers && <p style={styles.errorText}>{errorUsers}</p>}
         {!loadingUsers && !errorUsers && users.length > 0 && (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.tableCell}>ID</th>
-                <th style={styles.tableCell}>Nombre</th>
-                <th style={styles.tableCell}>Email</th>
-                <th style={styles.tableCell}>Nota (ej)</th>
+                <th style={styles.tableHeader}>ID</th>
+                <th style={styles.tableHeader}>Nombre</th>
+                <th style={styles.tableHeader}>Email</th>
+                <th style={styles.tableHeader}>Nota (ej)</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u: User) => (
-                <tr key={u.id}>
+                <tr key={u.id} style={styles.tableRow}>
                   <td style={styles.tableCell}>{u.id}</td>
                   <td style={styles.tableCell}>{u.name}</td>
                   <td style={styles.tableCell}>{u.email}</td>
@@ -322,33 +371,36 @@ export default function AdminDashboard() {
         )}
       </section>
 
+      {/* Sección: Estadísticas de exámenes */}
       <section style={styles.section}>
-        <h2>Estadísticas de Exámenes (p80, p70, p60, media)</h2>
-        <label>Filtrar exam_id: </label>
-        <input
-          type="text"
-          value={filterExamId}
-          onChange={(e) => setFilterExamId(e.target.value)}
-          style={{ marginBottom: '10px' }}
-        />
+        <h2 style={styles.sectionTitle}>Estadísticas de Exámenes (p80, p70, p60, media)</h2>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={styles.label}>Filtrar exam_id: </label>
+          <input
+            type="text"
+            value={filterExamId}
+            onChange={(e) => setFilterExamId(e.target.value)}
+            style={styles.input}
+          />
+        </div>
 
         {loadingStats && <p>Cargando estadísticas...</p>}
-        {statsError && <p style={{ color: 'red' }}>{statsError}</p>}
+        {statsError && <p style={styles.errorText}>{statsError}</p>}
 
         {!loadingStats && !statsError && filteredStats.length > 0 && (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.tableCell}>Exam ID</th>
-                <th style={styles.tableCell}>p80</th>
-                <th style={styles.tableCell}>p70</th>
-                <th style={styles.tableCell}>p60</th>
-                <th style={styles.tableCell}>Media</th>
+                <th style={styles.tableHeader}>Exam ID</th>
+                <th style={styles.tableHeader}>p80</th>
+                <th style={styles.tableHeader}>p70</th>
+                <th style={styles.tableHeader}>p60</th>
+                <th style={styles.tableHeader}>Media</th>
               </tr>
             </thead>
             <tbody>
               {filteredStats.map((item: ExamStat, idx: number) => (
-                <tr key={idx}>
+                <tr key={idx} style={styles.tableRow}>
                   <td style={styles.tableCell}>{item.exam_id}</td>
                   <td style={styles.tableCell}>{item.p80}</td>
                   <td style={styles.tableCell}>{item.p70}</td>
@@ -374,30 +426,82 @@ interface Styles {
 
 const styles: Styles = {
   container: {
-    maxWidth: '800px',
+    maxWidth: '1100px',
     margin: '0 auto',
     padding: '20px',
-    fontFamily: 'sans-serif'
+    fontFamily: 'Arial, sans-serif',
+    backgroundColor: '#f8f9fa',
+  },
+  mainTitle: {
+    textAlign: 'center',
+    marginBottom: '40px',
+    fontSize: '2rem',
+    color: '#343a40',
   },
   section: {
     marginBottom: '30px',
-    border: '1px solid #ccc',
-    padding: '15px',
-    borderRadius: '6px'
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '6px',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+  },
+  sectionTitle: {
+    marginBottom: '15px',
+    fontSize: '1.4rem',
+    color: '#17a2b8',
+    borderBottom: '2px solid #dee2e6',
+    paddingBottom: '5px'
   },
   formGroup: {
-    marginBottom: '10px',
+    marginBottom: '15px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '5px'
+    gap: '8px'
+  },
+  label: {
+    fontWeight: 'bold',
+    marginBottom: '2px'
+  },
+  input: {
+    padding: '8px',
+    border: '1px solid #ced4da',
+    borderRadius: '4px'
+  },
+  buttonPrimary: {
+    backgroundColor: '#007bff',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 15px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
+    marginTop: '15px'
+  },
+  tableHeader: {
+    border: '1px solid #dee2e6',
+    padding: '10px',
+    backgroundColor: '#e9ecef',
+    textAlign: 'left',
+    fontWeight: 'bold'
+  },
+  tableRow: {
+    // Podrías añadir un :hover con CSS, pero aquí en inline es más limitado:
+    // e.g. ':hover': { backgroundColor: '#f2f2f2' } // No funciona inline
   },
   tableCell: {
-    padding: '8px',
-    border: '1px solid #ddd',
-    textAlign: 'left'
+    border: '1px solid #dee2e6',
+    padding: '10px'
+  },
+  errorText: {
+    color: 'red',
+    marginTop: '10px'
+  },
+  successText: {
+    color: 'green',
+    marginTop: '10px'
   }
 };

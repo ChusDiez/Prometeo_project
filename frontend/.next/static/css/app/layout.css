@@ -559,6 +559,9 @@ video {
 .block{
   display: block;
 }
+.inline{
+  display: inline;
+}
 .flex{
   display: flex;
 }
@@ -579,9 +582,6 @@ video {
 }
 .border{
   border-width: 1px;
-}
-.underline{
-  text-decoration-line: underline;
 }
 .blur{
   --tw-blur: blur(8px);

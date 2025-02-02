@@ -1,6 +1,6 @@
 // components/auth/LoginForm.tsx
 "use client";
-import { useAppDispatch } from '@/lib/hooks';
+import { useAppDispatch } from '@/lib/redux/hooks';
 import { signIn } from '@/lib/redux/authSlice';
 import { useState } from 'react';
 
@@ -34,3 +34,5 @@ const LoginForm = () => {
     </form>
   );
 };
+
+export default LoginForm;
